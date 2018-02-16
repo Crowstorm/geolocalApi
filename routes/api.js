@@ -9,12 +9,12 @@ router.get('/androids', function (req, res) {
 });
 
 //add new android
-router.post('/androids', function (req, res) {
+router.post('/androids', function (req, res, next) {
     // let android = new Android(req.body);
     // android.save();
     Android.create(req.body).then(function(android){
         res.send(android);
-    });
+    }).catch(next);
 
 });
 
