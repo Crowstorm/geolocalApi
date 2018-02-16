@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const Android = require('../models/android')
+
 //get list of androids
 router.get('/androids', function (req, res) {
     res.send({ type: 'GET' });
@@ -8,12 +10,12 @@ router.get('/androids', function (req, res) {
 
 //add new android
 router.post('/androids', function (req, res) {
-    console.log(req.body);
-    res.send({
-        type: 'POST',
-        name: req.body.name,
-        weight: req.body.weight
+    // let android = new Android(req.body);
+    // android.save();
+    Android.create(req.body).then(function(android){
+        res.send(android);
     });
+
 });
 
 router.put('/androids/:id', function (req, res) {
