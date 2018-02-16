@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Crowstorm/geolocalApi#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.16.2"
   }
 }
