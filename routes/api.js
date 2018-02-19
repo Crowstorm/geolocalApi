@@ -28,8 +28,9 @@ router.post('/ulica/coordy', function(req, res, next){
     const lon = req.body.lon;
     const ulica = req.body.ulica;
     console.log(lat, lon, ulica);
-    Baza.findOneAndUpdate({ulica: ulica}, {$set: { lat: lat, lon: lon } }).then(function(baza){
-        res.send(baza);
+    Baza.findOneAndUpdate({ulica: ulica}, {$set: { lat: lat, lon: lon } }).then(function(baza, result){
+       // res.send(baza);
+        res.status(200).send({ document: result, success: true });
     })
 
     // db.collection('bazas').updateOne({ "ulica": ulica }, { $set: { "lat": lat, "lon": lon } }, (err, result) => {
