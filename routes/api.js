@@ -1,5 +1,7 @@
 const express = require('express');
 const _ = require('lodash');
+const axios = require('axios');
+
 const router = express.Router();
 
 const Android = require('../models/android');
@@ -44,20 +46,64 @@ router.post('/ulica/coordy', function (req, res, next) {
     //   })
 })
 
-router.get('/ulica/all', function (req, res, next) {
-    Baza.find().then(function (baza, result) {
-        let arr = _.toArray(baza);
-        //console.log(arr);
-        //res.status(200).send({ document: result, success: true });
-        let imiona = [];
-        arr.forEach(function (user) {
-            //console.log(user.ulica);
-            imiona.push(user.imie);
-            console.log(imiona)
+// export function getDatafromGeocode(address) {
+//     //Split full address into parts
+//     let result;
+//     result = address.split(',');
+//     console.log('result', result);
 
+//     let street = result[0].replace(/\s/g, '');;
+//     let city = result[1].replace(/\s/g, '');;
+//     const country = 'PL';
+
+//     console.log('test', street, city, country)
+
+//     //api call url, podmienic klucz api, bo ten moj joł
+//     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${street},${city}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+//     console.log(url);
+
+//     const request = axios.get(url);
+//     console.log(request);
+
+//     return function (dispatch) {
+//         dispatch({
+//             type: GET_DATA_FROM_GEOCODE,
+//             payload: request
+//         })
+//     }
+// }
+
+router.get('/ulica/all', function (req, res, next) {
+    Baza.find().limit(1).then(function (baza, result) {
+        let arr = _.toArray(baza);
+
+        let promise = new Promise((resolve, reject) => {
+           // let addresses = [];
+            arr.forEach(function (user) {
+                //console.log(user.ulica);
+                let street = user.ulica;
+                let city = user.miasto;
+
+                let address = street.concat(', ').concat(city);
+                // console.log(adres);
+
+               // addresses.push(adres);
+                const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+
+                let elo = axios.get(url).then((response) => {
+                    return response;
+                })
+
+                resolve(elo);
+            })
+        });
+
+        promise.then(response => {
+            res.status(200).send({
+                success: true,
+                'data': response.data.results[0].geometry.location.lat
+            });
         })
-        
-        res.send(imiona);
     })
 })
 
