@@ -78,28 +78,38 @@ router.post('/ulica/coordy', function (req, res, next) {
 // }
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(10).then(function (baza, result) {
+    Baza.find().limit(3).then(function (baza, result) {
         let arr = _.toArray(baza);
-        let coords = [];
+        let coordsArr = [];
 
-        const promise = new Promise((resolve, reject) => {
+        const forEachPromise = new Promise((resolve, reject) => {
             arr.forEach((user, index) => {
-                // console.log(index);
-                const street = user.ulica;
-                const city = user.miasto;
-                const address = encodeURI(street.concat(', ').concat(city));
-                const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+                let coordPromise = new Promise((resolve, reject) => {
+                    const street = user.ulica;
+                    const city = user.miasto;
+                    const address = encodeURI(street.concat(', ').concat(city));
+                    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
 
-                // console.log(url);
-                fetch(url, { method: 'GET' }).then(res => res.json())
-                    .then((json) => {
-                        coords.push(json);
-                    });
-
-                console.log(index, arr.length);
-                if (index+1 == arr.length) {
+                    // console.log(url);
+                    let coords = fetch(url, { method: 'GET' }).then(res => res.json())
+                        .then((json) => {
+                            coordsArr.push(json.results[0].formatted_address);
+                            console.log(coordsArr);
+                            return json.results[0].formatted_address;
+                        });
                     resolve(coords);
-                }
+                })
+
+                coordPromise.then(response =>{
+                    console.log('res',response);
+                })
+
+                // console.log('jestem', coords);
+                // if (index + 1 == arr.length) {
+                //     console.log('jestem', coords);
+                //     resolve(coords);
+                // }
+
             });
         });
 
