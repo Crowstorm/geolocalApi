@@ -1,6 +1,10 @@
 const express = require('express');
 const _ = require('lodash');
 const axios = require('axios');
+const fetch = require('node-fetch');
+const api = require('../services/api');
+
+//const forEach = require('async-foreach').forEach;
 
 const router = express.Router();
 
@@ -74,37 +78,98 @@ router.post('/ulica/coordy', function (req, res, next) {
 // }
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(1).then(function (baza, result) {
+    Baza.find().limit(10).then(function (baza, result) {
         let arr = _.toArray(baza);
+        let coords = [];
 
-        let promise = new Promise((resolve, reject) => {
-           // let addresses = [];
-            arr.forEach(function (user) {
-                //console.log(user.ulica);
-                let street = user.ulica;
-                let city = user.miasto;
-
-                let address = street.concat(', ').concat(city);
-                // console.log(adres);
-
-               // addresses.push(adres);
+        const promise = new Promise((resolve, reject) => {
+            arr.forEach((user, index) => {
+                // console.log(index);
+                const street = user.ulica;
+                const city = user.miasto;
+                const address = encodeURI(street.concat(', ').concat(city));
                 const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
 
-                let elo = axios.get(url).then((response) => {
-                    return response;
-                })
+                // console.log(url);
+                fetch(url, { method: 'GET' }).then(res => res.json())
+                    .then((json) => {
+                        coords.push(json);
+                    });
 
-                resolve(elo);
-            })
+                console.log(index, arr.length);
+                if (index+1 == arr.length) {
+                    resolve(coords);
+                }
+            });
         });
+
+        // promise.then((coords) => {
+        //     console.log('done', coords.length);
+        // });
+
+        // let mainPromise = new Promise((resolve, reject) => {
+        //     let noOfSuccess = 0;
+        //     let noCoords = 0;
+
+        //     let arrSucc = [];
+        //     let arrFail = [];
+        //     let arrCheck;
+
+        //     let forEachPromise = new Promise((resolve, reject) => {
+        //         arr.forEach(user => {
+        //             let coordPromise = new Promise((resolve, reject) => {
+        //                 console.log('street', user.ulica)
+
+        //                 let street = user.ulica;
+        //                 let city = user.miasto;
+
+        //                 let address = street.concat(', ').concat(city);
+
+        //                 const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+
+        //                 setTimeout(function () {
+        //                     let coords = axios.get(url).then((response) => {
+        //                         return response;
+        //                     })
+        //                     resolve(coords);
+        //                 }, 1000);
+
+        //             })
+
+        //             coordPromise.then(response => {
+        //                 if (response.data.results[0].types == "street_address") {
+        //                     console.log('adres', response.data.results[0].formatted_address)
+        //                     arrSucc.push(response.data.results[0].formatted_address);
+        //                     noOfSuccess++;
+        //                 } else {
+        //                     arrFail.push(response.data.results[0].formatted_address);
+        //                     noCoords++;
+        //                 }
+        //                 console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords)
+        //             })
+        //         });
+
+        //         resolve(noOfSuccess)
+        //     })
+
+        //     forEachPromise.then(response => {
+        //         //console.log('resp', response)
+        //     })
+        //     resolve(noOfSuccess)
+        // })
+
 
         promise.then(response => {
             res.status(200).send({
                 success: true,
-                'data': response.data.results[0].geometry.location.lat
+                'data': coords
             });
         })
+
+
     })
+
+
 })
 
 
