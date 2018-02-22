@@ -51,7 +51,7 @@ router.post('/ulica/coordy', function (req, res, next) {
 })
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(15).then(function (baza, result) {
+    Baza.find().limit(120).then(function (baza, result) {
         let arr = _.toArray(baza);
         let coordsArr = [];
 
@@ -80,10 +80,9 @@ router.get('/ulica/all', function (req, res, next) {
 
 
                         setTimeout(function () {
-                        let coords = axios.get(url).then((response) => {
-                            console.log('w axios', addressNoEncode);
-                           // const resp = {addressNoEncode, response}
-                            return response;
+                        let coords = axios.get(url).then((value) => {
+                            const resp = {addressNoEncode, value}
+                            return resp;
                         })
                         
                         resolve(coords);
@@ -94,15 +93,15 @@ router.get('/ulica/all', function (req, res, next) {
                     coordPromise.then(response => {
                         //console.log(response);
                         try {
-                            if (response.data.status == 'ZERO_RESULTS') {
-                                console.log('blednyaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', index, response.address)
+                            if (response.value.data.status == 'ZERO_RESULTS') {
+                                console.log('blednyaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', index, response.addressNoEncode)
                                 noCoords++;
-                            } else if (response.data.results[0].types == "street_address") {
-                                console.log('adres', response.data.results[0].formatted_address)
-                                arrSucc.push(response.data.results[0].formatted_address);
+                            } else if (response.value.data.results[0].types == "street_address") {
+                                console.log('adres', response.value.data.results[0].formatted_address)
+                                arrSucc.push(response.value.data.results[0].formatted_address);
                                 noOfSuccess++;
-                            } else if (response.data.results[0].types == "route") {
-                                arrFail.push(response.data.results[0].formatted_address);
+                            } else if (response.value.data.results[0].types == "route") {
+                                arrFail.push(response.value.data.results[0].formatted_address);
                                 noCoords++;
                             }
                         }
@@ -110,7 +109,7 @@ router.get('/ulica/all', function (req, res, next) {
                             console.log('err', err)
                             console.log('index', index)
                         }
-                        console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords, 'typ', response.data.results[0].types )
+                        console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords, 'typ', response.value.data.results[0].types )
                     })
                 });
 
