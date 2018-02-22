@@ -51,85 +51,91 @@ router.post('/ulica/coordy', function (req, res, next) {
 })
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(120).then(function (baza, result) {
+    Baza.find().limit(15).then(function (baza, result) {
         let arr = _.toArray(baza);
         let coordsArr = [];
 
+        //Nie wiem czy potrzebny promise, iksDe, do poprawy
         let mainPromise = new Promise((resolve, reject) => {
-            let noOfSuccess = 0;
-            let noCoords = 0;
-
-            let arrSucc = [];
-            let arrFail = [];
-            let arrCheck;
-
+            //promise dla foreacha
             let forEachPromise = new Promise((resolve, reject) => {
+                //Do zwrotki dla usera
+                let noOfSuccess = 0;
+                let noCoords = 0;
+                let arrSucc = [];
+                let arrFail = [];
+                let arrCheck = [];
+                let arraysOfUsers = { arrSucc, arrCheck, arrFail, noOfSuccess, noCoords };
                 arr.forEach((user, index) => {
+                    //Promise pobierajacy dane z google API
                     let coordPromise = new Promise((resolve, reject) => {
-                        console.log('street', user.ulica)
+                        const street = user.ulica;
+                        const city = user.miasto;
 
-                        let street = user.ulica;
-                        let city = user.miasto;
-
-                        const address = encodeURI(street.concat(', ').concat(city));
-                        const addressNoEncode = street.concat(', ').concat(city);
+                        const address = encodeURI(street.concat(', ').concat(city)); //Dla API
+                        const addressNoEncode = street.concat(', ').concat(city); //Dla zwrotki
 
                         const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
-                        // const elo = "Kwiatowa 53, Zakopane";
-                        // const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${elo}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
-
-
                         setTimeout(function () {
-                        let coords = axios.get(url).then((value) => {
-                            const resp = {addressNoEncode, value}
-                            return resp;
-                        })
-                        
-                        resolve(coords);
+                            let coords = axios.get(url).then((value) => {
+                                const resp = { addressNoEncode, value }
+                                return resp;
+                            })
+                            resolve(coords);
                         }, 100 * index);
 
                     })
 
+                    //Resolve promise z API, segregacja rekordow do odpowiednich tablic
                     coordPromise.then(response => {
-                        //console.log(response);
-                        try {
-                            if (response.value.data.status == 'ZERO_RESULTS') {
-                                console.log('blednyaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', index, response.addressNoEncode)
-                                noCoords++;
-                            } else if (response.value.data.results[0].types == "street_address") {
-                                console.log('adres', response.value.data.results[0].formatted_address)
-                                arrSucc.push(response.value.data.results[0].formatted_address);
-                                noOfSuccess++;
-                            } else if (response.value.data.results[0].types == "route") {
-                                arrFail.push(response.value.data.results[0].formatted_address);
-                                noCoords++;
+                        let arrPromise = new Promise((resolve, reject) => {
+                            try {
+                                if (response.value.data.status == 'ZERO_RESULTS') {
+                                    //console.log('bledny', index, response.addressNoEncode)
+                                    noCoords++;
+                                    arrFail.push(response.addressNoEncode);
+                                } else if (response.value.data.results[0].types == "street_address") {
+                                    //console.log('adres', response.value.data.results[0].formatted_address)
+                                    arrSucc.push(response.value.data.results[0].formatted_address);
+                                    noOfSuccess++;
+                                } else if (response.value.data.results[0].types != "street_address") {
+                                    arrCheck.push(response.value.data.results[0].formatted_address);
+                                    noCoords++;
+                                }
                             }
-                        }
-                        catch(err){
-                            console.log('err', err)
-                            console.log('index', index)
-                        }
-                        console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords, 'typ', response.value.data.results[0].types )
+                            catch (err) {
+                                console.log('err', err)
+                                console.log('index', index)
+                            }
+                            console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords, 'typ', response.value.data.results[0].types)
+                            resolve(arraysOfUsers);
+                        })
+                        //Chce odzyskac arrays of users i przeslac go dalej
+                        arrPromise.then(coords => {
+                           // console.log('ostateczny', coords);
+                            if (index + 1 == arr.length) {
+                                resolve(coords);
+                            }
+                        })
                     })
                 });
-
-                resolve(noOfSuccess)
+                console.log('ostateczny', arraysOfUsers);
             })
 
-            forEachPromise.then(response => {
-                //console.log('resp', response)
+            //wychodze z nastepnego promise
+            forEachPromise.then(coords => {
+               // console.log('O KURWA WYSZŁEM', coords)
+                resolve(coords);
             })
-            resolve(noOfSuccess)
         })
 
-
-        promise.then(response => {
+        //wysylam tablice sukcesow i porazek do uzytkownika
+        mainPromise.then(response => {
             res.status(200).send({
                 success: true,
-                'data': coords
+                'data': response
             });
         })
-
 
     })
 })
