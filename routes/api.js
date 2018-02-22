@@ -39,15 +39,6 @@ router.post('/ulica/coordy', function (req, res, next) {
         // res.send(baza);
         res.status(200).send({ document: result, success: true });
     })
-
-    // db.collection('bazas').updateOne({ "ulica": ulica }, { $set: { "lat": lat, "lon": lon } }, (err, result) => {
-    //     if (err) {
-    //       res.send({ 'error': 'An error has occurred' });
-    //     } else {
-    //       if (err) throw err;
-    //       res.status(200).send({ document: result, success: true });
-    //     }
-    //   })
 })
 
 router.get('/ulica/all', function (req, res, next) {
@@ -78,7 +69,7 @@ router.get('/ulica/all', function (req, res, next) {
                         const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
                         setTimeout(function () {
                             let coords = axios.get(url).then((value) => {
-                                const resp = { addressNoEncode, value }
+                                const resp = { addressNoEncode, value, street, city }
                                 return resp;
                             })
                             resolve(coords);
@@ -97,6 +88,19 @@ router.get('/ulica/all', function (req, res, next) {
                                 } else if (response.value.data.results[0].types == "street_address") {
                                     //console.log('adres', response.value.data.results[0].formatted_address)
                                     arrSucc.push(response.value.data.results[0].formatted_address);
+
+                                    //Zupdejtuj w bazie
+                                    const ulica = response.street;
+                                    const miasto = response.city;
+                                    const lat = response.value.data.results[0].geometry.location.lat;
+                                    const lon = response.value.data.results[0].geometry.location.lng;
+                                    console.log(ulica, 'xD', miasto, 'at', lat, 'lon', lon);
+                                    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
+                                        console.log('Sukces')
+                                        // res.send(baza);
+                                       // res.status(200).send({ document: result, success: true });
+                                    })
+
                                     noOfSuccess++;
                                 } else if (response.value.data.results[0].types != "street_address") {
                                     arrCheck.push(response.value.data.results[0].formatted_address);
