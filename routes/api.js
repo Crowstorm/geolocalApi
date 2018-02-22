@@ -96,9 +96,7 @@ router.get('/ulica/all', function (req, res, next) {
                                     const lon = response.value.data.results[0].geometry.location.lng;
                                     console.log(ulica, 'xD', miasto, 'at', lat, 'lon', lon);
                                     Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
-                                        console.log('Sukces')
-                                        // res.send(baza);
-                                       // res.status(200).send({ document: result, success: true });
+                                        console.log('SAKCES')
                                     })
 
                                     noOfSuccess++;
