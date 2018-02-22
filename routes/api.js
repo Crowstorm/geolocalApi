@@ -50,123 +50,78 @@ router.post('/ulica/coordy', function (req, res, next) {
     //   })
 })
 
-// export function getDatafromGeocode(address) {
-//     //Split full address into parts
-//     let result;
-//     result = address.split(',');
-//     console.log('result', result);
-
-//     let street = result[0].replace(/\s/g, '');;
-//     let city = result[1].replace(/\s/g, '');;
-//     const country = 'PL';
-
-//     console.log('test', street, city, country)
-
-//     //api call url, podmienic klucz api, bo ten moj joł
-//     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${street},${city}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
-//     console.log(url);
-
-//     const request = axios.get(url);
-//     console.log(request);
-
-//     return function (dispatch) {
-//         dispatch({
-//             type: GET_DATA_FROM_GEOCODE,
-//             payload: request
-//         })
-//     }
-// }
-
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(3).then(function (baza, result) {
+    Baza.find().limit(15).then(function (baza, result) {
         let arr = _.toArray(baza);
         let coordsArr = [];
 
-        const forEachPromise = new Promise((resolve, reject) => {
-            arr.forEach((user, index) => {
-                let coordPromise = new Promise((resolve, reject) => {
-                    const street = user.ulica;
-                    const city = user.miasto;
-                    const address = encodeURI(street.concat(', ').concat(city));
-                    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+        let mainPromise = new Promise((resolve, reject) => {
+            let noOfSuccess = 0;
+            let noCoords = 0;
 
-                    // console.log(url);
-                    let coords = fetch(url, { method: 'GET' }).then(res => res.json())
-                        .then((json) => {
-                            coordsArr.push(json.results[0].formatted_address);
-                            console.log(coordsArr);
-                            return json.results[0].formatted_address;
-                        });
-                    resolve(coords);
-                })
+            let arrSucc = [];
+            let arrFail = [];
+            let arrCheck;
 
-                coordPromise.then(response =>{
-                    console.log('res',response);
-                })
+            let forEachPromise = new Promise((resolve, reject) => {
+                arr.forEach((user, index) => {
+                    let coordPromise = new Promise((resolve, reject) => {
+                        console.log('street', user.ulica)
 
-                // console.log('jestem', coords);
-                // if (index + 1 == arr.length) {
-                //     console.log('jestem', coords);
-                //     resolve(coords);
-                // }
+                        let street = user.ulica;
+                        let city = user.miasto;
 
-            });
-        });
+                        const address = encodeURI(street.concat(', ').concat(city));
+                        const addressNoEncode = street.concat(', ').concat(city);
 
-        // promise.then((coords) => {
-        //     console.log('done', coords.length);
-        // });
+                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+                        // const elo = "Kwiatowa 53, Zakopane";
+                        // const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${elo}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
 
-        // let mainPromise = new Promise((resolve, reject) => {
-        //     let noOfSuccess = 0;
-        //     let noCoords = 0;
 
-        //     let arrSucc = [];
-        //     let arrFail = [];
-        //     let arrCheck;
+                        setTimeout(function () {
+                        let coords = axios.get(url).then((response) => {
+                            console.log('w axios', addressNoEncode);
+                           // const resp = {addressNoEncode, response}
+                            return response;
+                        })
+                        
+                        resolve(coords);
+                        }, 100 * index);
 
-        //     let forEachPromise = new Promise((resolve, reject) => {
-        //         arr.forEach(user => {
-        //             let coordPromise = new Promise((resolve, reject) => {
-        //                 console.log('street', user.ulica)
+                    })
 
-        //                 let street = user.ulica;
-        //                 let city = user.miasto;
+                    coordPromise.then(response => {
+                        //console.log(response);
+                        try {
+                            if (response.data.status == 'ZERO_RESULTS') {
+                                console.log('blednyaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', index, response.address)
+                                noCoords++;
+                            } else if (response.data.results[0].types == "street_address") {
+                                console.log('adres', response.data.results[0].formatted_address)
+                                arrSucc.push(response.data.results[0].formatted_address);
+                                noOfSuccess++;
+                            } else if (response.data.results[0].types == "route") {
+                                arrFail.push(response.data.results[0].formatted_address);
+                                noCoords++;
+                            }
+                        }
+                        catch(err){
+                            console.log('err', err)
+                            console.log('index', index)
+                        }
+                        console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords, 'typ', response.data.results[0].types )
+                    })
+                });
 
-        //                 let address = street.concat(', ').concat(city);
+                resolve(noOfSuccess)
+            })
 
-        //                 const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
-
-        //                 setTimeout(function () {
-        //                     let coords = axios.get(url).then((response) => {
-        //                         return response;
-        //                     })
-        //                     resolve(coords);
-        //                 }, 1000);
-
-        //             })
-
-        //             coordPromise.then(response => {
-        //                 if (response.data.results[0].types == "street_address") {
-        //                     console.log('adres', response.data.results[0].formatted_address)
-        //                     arrSucc.push(response.data.results[0].formatted_address);
-        //                     noOfSuccess++;
-        //                 } else {
-        //                     arrFail.push(response.data.results[0].formatted_address);
-        //                     noCoords++;
-        //                 }
-        //                 console.log('coordResp', 'succ', noOfSuccess, 'fail', noCoords)
-        //             })
-        //         });
-
-        //         resolve(noOfSuccess)
-        //     })
-
-        //     forEachPromise.then(response => {
-        //         //console.log('resp', response)
-        //     })
-        //     resolve(noOfSuccess)
-        // })
+            forEachPromise.then(response => {
+                //console.log('resp', response)
+            })
+            resolve(noOfSuccess)
+        })
 
 
         promise.then(response => {
@@ -178,9 +133,44 @@ router.get('/ulica/all', function (req, res, next) {
 
 
     })
-
-
 })
+
+
+// const forEachPromise = new Promise((resolve, reject) => {
+//     arr.forEach((user, index) => {
+//         let coordPromise = new Promise((resolve, reject) => {
+//             const street = user.ulica;
+//             const city = user.miasto;
+//             const address = encodeURI(street.concat(', ').concat(city));
+//             const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+
+//             let coords = fetch(url, { method: 'GET' }).then(res => res.json())
+//                 .then((json) => {
+//                     coordsArr.push(json.results[0].formatted_address);
+//                     console.log(coordsArr);
+//                     return json.results[0].formatted_address;
+//                 });
+//             resolve(coords);
+//         })
+
+//         coordPromise.then(response =>{
+//             console.log('res',response);
+//         })
+
+//         // console.log('jestem', coords);
+//         // if (index + 1 == arr.length) {
+//         //     console.log('jestem', coords);
+//         //     resolve(coords);
+//         // }
+
+//     });
+// });
+// promise.then((coords) => {
+//     console.log('done', coords.length);
+// });
+
+
+
 
 
 // router.get('/ulica/all', function (req, res, next) {
