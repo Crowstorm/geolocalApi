@@ -56,7 +56,7 @@ router.get('/ulica/all', function (req, res, next) {
                 let arrSucc = [];
                 let arrFail = [];
                 let arrCheck = [];
-                let arraysOfUsers = { arrSucc, arrCheck, arrFail, noOfSuccess, noCoords };
+                let arraysOfUsers = { arrSucc, arrCheck, arrFail};
                 arr.forEach((user, index) => {
                     //Promise pobierajacy dane z google API
                     let coordPromise = new Promise((resolve, reject) => {
@@ -95,7 +95,7 @@ router.get('/ulica/all', function (req, res, next) {
                                     const lat = response.value.data.results[0].geometry.location.lat;
                                     const lon = response.value.data.results[0].geometry.location.lng;
                                     console.log(ulica, 'xD', miasto, 'at', lat, 'lon', lon);
-                                    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
+                                    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon, set: true } }).then(function (baza, result) {
                                         console.log('SAKCES')
                                     })
 

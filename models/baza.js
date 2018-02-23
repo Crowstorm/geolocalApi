@@ -41,6 +41,10 @@ const BazaSchema = new Schema({
     },
     lon: {
         type: String
+    },
+    set: {
+        type: Boolean,
+        default: false
     }
 });
 
