@@ -20,10 +20,10 @@ router.get('/ulica', function (req, res, next) {
     // db.getCollection('company_company_copy').find({}).then(function (baza){
     //     res.send(baza);
     // })
-    baza.find({name: "Gabinet Weterynaryjny"}).limit(5).then(function (baza) {
+    baza.find({ name: "Gabinet Weterynaryjny" }).limit(5).then(function (baza) {
         //console.log(baza.name)
         res.send(baza);
-        
+
     }).catch(next);
 })
 
@@ -51,7 +51,7 @@ router.post('/ulica/coordy', function (req, res, next) {
 })
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().then(function (baza, result) {
+    baza.find().limit(1).then(function (baza, result) {
         let arr = _.toArray(baza);
         let coordsArr = [];
 
@@ -65,12 +65,15 @@ router.get('/ulica/all', function (req, res, next) {
                 let arrSucc = [];
                 let arrFail = [];
                 let arrCheck = [];
-                let arraysOfUsers = { arrSucc, arrCheck, arrFail};
+                let arraysOfUsers = { arrSucc, arrCheck, arrFail };
                 arr.forEach((user, index) => {
                     //Promise pobierajacy dane z google API
+                    //console.log('user', user)
                     let coordPromise = new Promise((resolve, reject) => {
-                        const street = user.ulica;
-                        const city = user.miasto;
+                        const street = user.addresses[0].route.concat(', ').concat(user.addresses[0].street_number);
+                        console.log('ulica', street)
+                        const city = user.addresses[0].locality;
+                        console.log('miasto', city)
 
                         const address = encodeURI(street.concat(', ').concat(city)); //Dla API
                         const addressNoEncode = street.concat(', ').concat(city); //Dla zwrotki
@@ -99,13 +102,18 @@ router.get('/ulica/all', function (req, res, next) {
                                     arrSucc.push(response.value.data.results[0].formatted_address);
 
                                     //Zupdejtuj w bazie
-                                    const ulica = response.street;
+                                    const ulica = response.street.split(',');
+
+                                    let ulicaNazwa = ulica[0].replace(/\s/g, '');
+                                    let ulicaNumer = ulica[1].replace(/\s/g, '');
+
+
                                     const miasto = response.city;
                                     const lat = response.value.data.results[0].geometry.location.lat;
                                     const lon = response.value.data.results[0].geometry.location.lng;
-                                    console.log(ulica, 'xD', miasto, 'at', lat, 'lon', lon);
-                                    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon, set: true } }).then(function (baza, result) {
-                                        console.log('SAKCES')
+                                    console.log(ulicaNazwa, 'naxzwa', ulicaNumer, 'numer,', miasto, 'at', lat, 'lon', lon);
+                                    Bms.findOneAndUpdate({ "addresses.route": ulicaNazwa, "addresses.street_number": ulicaNumer, "addresses.locality": miasto }, { $set: { "addresses.coordinates.lat": lat, "addresses.coordinates.lon": lon, coordsSet: true } }).then(function (baza, result) {
+                                        console.log('baza', baza)
                                     })
 
                                     noOfSuccess++;
@@ -123,7 +131,7 @@ router.get('/ulica/all', function (req, res, next) {
                         })
                         //Chce odzyskac arrays of users i przeslac go dalej
                         arrPromise.then(coords => {
-                           // console.log('ostateczny', coords);
+                            // console.log('ostateczny', coords);
                             if (index + 1 == arr.length) {
                                 resolve(coords);
                             }
@@ -135,7 +143,7 @@ router.get('/ulica/all', function (req, res, next) {
 
             //wychodze z nastepnego promise
             forEachPromise.then(coords => {
-               // console.log('O KURWA WYSZŁEM', coords)
+                // console.log('O KURWA WYSZŁEM', coords)
                 resolve(coords);
             })
         })
