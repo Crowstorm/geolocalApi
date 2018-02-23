@@ -10,13 +10,21 @@ const router = express.Router();
 
 const Android = require('../models/android');
 const Baza = require('../models/baza')
+const Bms = require('../models/bms')
 
+//ustaw jaka baza ma byc przerabiana (schema)
+const baza = Bms;
 
 //testowa szukajka
 router.get('/ulica', function (req, res, next) {
-    Baza.find({ imie: req.query.imie }).then(function (baza) {
+    // db.getCollection('company_company_copy').find({}).then(function (baza){
+    //     res.send(baza);
+    // })
+    baza.find({name: "Gabinet Weterynaryjny"}).limit(5).then(function (baza) {
+        //console.log(baza.name)
         res.send(baza);
-    })
+        
+    }).catch(next);
 })
 
 //dodaj rekord
@@ -34,15 +42,16 @@ router.post('/ulica/coordy', function (req, res, next) {
     const lat = req.body.lat;
     const lon = req.body.lon;
     const ulica = req.body.ulica;
+    const miasto = req.body.miasto;
     console.log(lat, lon, ulica);
-    Baza.findOneAndUpdate({ ulica: ulica }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
+    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
         // res.send(baza);
         res.status(200).send({ document: result, success: true });
     })
 })
 
 router.get('/ulica/all', function (req, res, next) {
-    Baza.find().limit(15).then(function (baza, result) {
+    Baza.find().then(function (baza, result) {
         let arr = _.toArray(baza);
         let coordsArr = [];
 
@@ -101,7 +110,7 @@ router.get('/ulica/all', function (req, res, next) {
 
                                     noOfSuccess++;
                                 } else if (response.value.data.results[0].types != "street_address") {
-                                    arrCheck.push(response.value.data.results[0].formatted_address);
+                                    arrFail.push(response.value.data.results[0].formatted_address);
                                     noCoords++;
                                 }
                             }

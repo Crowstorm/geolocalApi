@@ -11,7 +11,9 @@ const routes = require('./routes/api')
 const app = express();
 
 //connect to mongoDB
-mongoose.connect('mongodb://localhost/test')
+//mongoose.connect('mongodb://localhost/test')
+mongoose.connect('mongodb://52.58.22.72:27017/bmsGovet');
+
 mongoose.Promise = global.Promise;
 
 app.use(cors())

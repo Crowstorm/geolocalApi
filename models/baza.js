@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const BazaSchema = new Schema({
-    imie: {
+    name: {
         type: String
     },
     nazwisko: {
