@@ -112,7 +112,7 @@ router.get('/ulica/all', function (req, res, next) {
                                     const lat = response.value.data.results[0].geometry.location.lat;
                                     const lon = response.value.data.results[0].geometry.location.lng;
                                     console.log(ulicaNazwa, 'naxzwa', ulicaNumer, 'numer,', miasto, 'at', lat, 'lon', lon);
-                                    Bms.findOneAndUpdate({ "addresses.route": ulicaNazwa, "addresses.street_number": ulicaNumer, "addresses.locality": miasto }, { $set: { "addresses.coordinates.lat": lat, "addresses.coordinates.lon": lon, coordsSet: true } }).then(function (baza, result) {
+                                    Bms.findOneAndUpdate({ "addresses.route": ulicaNazwa, "addresses.street_number": ulicaNumer, "addresses.locality": miasto }, { $set: { lat: lat, lon: lon, coordsSet: true } }).then(function (baza, result) {
                                         console.log('baza', baza)
                                     })
 
