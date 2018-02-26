@@ -50,6 +50,20 @@ router.post('/ulica/coordy', function (req, res, next) {
     })
 })
 
+//usun rekord z bazy
+router.delete('/database/delete',(req, res, next) =>{
+    let id = 'ObjectId("'.concat(req.body.id).concat('")');
+    baza.findByIdAndRemove(id).then((err, client)=>{
+        console.log(id)
+        if (err) return res.status(500).send(err);
+        const response = {
+            msg: "Klient usuniety z bazy",
+            success: true
+        }
+        return res.status(200).send(response);
+    })
+})
+
 //pojedyncze rekordy
 router.get('/geoloc/single', (req, res, next) => {
     baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {

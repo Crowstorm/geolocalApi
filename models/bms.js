@@ -16,7 +16,7 @@ const BmsSchema = new Schema({
 
 });
 
-const Bms = mongoose.model('company_company_copy', BmsSchema, 'company_company_copy');
+const Bms = mongoose.model('company_company_copy', BmsSchema, 'company_company_copy2');
 //trzeci argument preventuje utworzenie liczby mnogiej
 
 module.exports = Bms;
