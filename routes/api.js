@@ -43,13 +43,79 @@ router.post('/ulica/coordy', function (req, res, next) {
     const lon = req.body.lon;
     const ulica = req.body.ulica;
     const miasto = req.body.miasto;
-    console.log(lat, lon, ulica);
-    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat: lat, lon: lon } }).then(function (baza, result) {
+    console.log(lat, lng, ulica);
+    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat, lng } }).then(function (baza, result) {
         // res.send(baza);
         res.status(200).send({ document: result, success: true });
     })
 })
 
+//pojedyncze rekordy
+router.get('/geoloc/single', (req, res, next) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {
+        //{ "addresses.coordinatesSet": null }
+
+        let coordPromise = new Promise((resolve, reject) => {
+            if (!record[0].addresses[0]) {
+                const resp = {
+                    error: 'No address found',
+                    name: record[0].name,
+                    clientId: record[0]._id,
+                    phoneNumber:  (_.get(record[0], 'phones[0].number', 'Brak telefonu'))
+                };
+                resolve(resp);
+            } else {
+                const streetAPI = record[0].addresses[0].route.concat(', ').concat(record[0].addresses[0].street_number);
+                const cityAPI = record[0].addresses[0].locality;
+                const id = record[0]._id;
+
+                const address = encodeURI(streetAPI.concat(', ').concat(cityAPI)); //Dla API
+                const addressNoEncode = streetAPI.concat(', ').concat(cityAPI); //Dla zwrotki
+                const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+
+                let coords = axios.get(url).then((value) => {
+                    if (value.data.status == 'OK') {
+
+                        const resp = {
+                            addressNoEncode: addressNoEncode,
+                            googleMapData: value,
+                            streetAPI: streetAPI,
+                            cityAPI: cityAPI,
+                            lat: value.data.results[0].geometry.location.lat,
+                            lng: value.data.results[0].geometry.location.lng,
+                            clientId: id
+                        };
+
+                        resolve(resp);
+                    } else {
+                        const error = 'Could not get coordinates';
+                        const resp = { error: error };
+                        resolve(resp);
+                    }
+                })
+            }
+        })
+
+        coordPromise.then(response => {
+            if (!response.error) {
+                baza.findByIdAndUpdate(response.clientId, { $set: { "addresses.0.coordinates": [response.lat, response.lng], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
+                    //console.log(update);
+                    res.status(200).send({
+                        success: true,
+                        'data': update
+                    });
+                })
+            } else {
+                res.status(200).send({
+                    success: true,
+                    'data': response
+                });;
+            }
+        })
+    })
+})
+
+//masowka
 router.get('/ulica/all', function (req, res, next) {
     baza.find().limit(1).then(function (baza, result) {
         let arr = _.toArray(baza);

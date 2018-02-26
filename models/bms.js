@@ -9,17 +9,11 @@ const BmsSchema = new Schema({
         locality: String,
         country: String,
         administrative_area_level_1: String,
-        coordinates:[{
-            lat: {type:String},
-            lon: {type:String}
-        }]
+        coordinates: Array,
+        coordinatesSet: Boolean
     }],
-    coordsSet: {
-        type: Boolean,
-        default: false
-    },
     name: String,
-    
+
 });
 
 const Bms = mongoose.model('company_company_copy', BmsSchema, 'company_company_copy');
