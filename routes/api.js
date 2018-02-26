@@ -51,10 +51,11 @@ router.post('/ulica/coordy', function (req, res, next) {
 })
 
 //usun rekord z bazy
-router.delete('/database/delete',(req, res, next) =>{
+router.delete('/database/delete', (req, res, next) => {
     let id = 'ObjectId("'.concat(req.body.id).concat('")');
-    baza.findByIdAndRemove(id).then((err, client)=>{
-        console.log(id)
+    let id2 = req.body.id;
+    baza.findByIdAndRemove(req.body.id).then((err, client) => {
+        console.log(client)
         if (err) return res.status(500).send(err);
         const response = {
             msg: "Klient usuniety z bazy",
@@ -75,7 +76,7 @@ router.get('/geoloc/single', (req, res, next) => {
                     error: 'No address found',
                     name: record[0].name,
                     clientId: record[0]._id,
-                    phoneNumber:  (_.get(record[0], 'phones[0].number', 'Brak telefonu'))
+                    phoneNumber: (_.get(record[0], 'phones[0].number', 'Brak telefonu'))
                 };
                 resolve(resp);
             } else {
