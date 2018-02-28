@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const BmsSchema = new Schema({
-    _id: String,
+    //_id: String,
     addresses: [{
         route: String,
         street_number: String,
@@ -17,7 +17,7 @@ const BmsSchema = new Schema({
 
 });
 
-const Bms = mongoose.model('company_company_copy2', BmsSchema, 'company_company_copy2');
+const Bms = mongoose.model('company_company_kopia_ostateczna', BmsSchema, 'company_company_kopia_ostateczna');
 //trzeci argument preventuje utworzenie liczby mnogiej
 
 module.exports = Bms;
