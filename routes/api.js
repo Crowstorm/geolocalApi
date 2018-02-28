@@ -51,10 +51,11 @@ router.post('/ulica/coordy', function (req, res, next) {
 })
 
 //usun rekord z bazy
-router.delete('/database/delete', (req, res, next) => {
+router.delete('/database/delete/', (req, res, next) => {
     let id = 'ObjectId("'.concat(req.body.id).concat('")');
     let id2 = req.body.id;
-    baza.findByIdAndRemove(req.body.id).then((err, client) => {
+    console.log(id, id2)
+    baza.findByIdAndRemove(id).then((err, client) => {
         console.log(client)
         if (err) return res.status(500).send(err);
         const response = {
@@ -68,8 +69,6 @@ router.delete('/database/delete', (req, res, next) => {
 //pojedyncze rekordy
 router.get('/geoloc/single', (req, res, next) => {
     baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {
-        //{ "addresses.coordinatesSet": null }
-
         let coordPromise = new Promise((resolve, reject) => {
             if (!record[0].addresses[0]) {
                 const resp = {
@@ -239,81 +238,5 @@ router.get('/ulica/all', function (req, res, next) {
 
     })
 })
-
-
-// const forEachPromise = new Promise((resolve, reject) => {
-//     arr.forEach((user, index) => {
-//         let coordPromise = new Promise((resolve, reject) => {
-//             const street = user.ulica;
-//             const city = user.miasto;
-//             const address = encodeURI(street.concat(', ').concat(city));
-//             const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
-
-//             let coords = fetch(url, { method: 'GET' }).then(res => res.json())
-//                 .then((json) => {
-//                     coordsArr.push(json.results[0].formatted_address);
-//                     console.log(coordsArr);
-//                     return json.results[0].formatted_address;
-//                 });
-//             resolve(coords);
-//         })
-
-//         coordPromise.then(response =>{
-//             console.log('res',response);
-//         })
-
-//         // console.log('jestem', coords);
-//         // if (index + 1 == arr.length) {
-//         //     console.log('jestem', coords);
-//         //     resolve(coords);
-//         // }
-
-//     });
-// });
-// promise.then((coords) => {
-//     console.log('done', coords.length);
-// });
-
-
-
-
-
-// router.get('/ulica/all', function (req, res, next) {
-//     Baza.find().then(function (results, err) {
-
-//         if (err) {
-//             return res.status(422).send({ success: false, error: err });
-//         }
-
-//         setLocalization(results).then((results) => {
-//             res.status(200).send({
-//                 success: true,
-//                 'data': results
-//             });
-//         });
-
-
-//     });
-// });
-
-// function setLocalization(results) {
-//     const resultsCount = results.length;
-//     const nieustawione = [];
-
-//     return Promise((resolve, reject) => {
-//         results.forEach((result, index) => {
-
-
-//             if (!nieustawi) {
-//                 nieustawione.push(tenniesutawiony);
-//             }
-
-
-//             if (resultsCount == index) {
-//                 reolve(nieustawione);
-//             }
-//         });
-//     });
-// }
 
 module.exports = router; // export the router
