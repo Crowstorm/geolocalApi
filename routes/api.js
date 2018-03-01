@@ -27,16 +27,6 @@ router.get('/ulica', function (req, res, next) {
     }).catch(next);
 })
 
-//dodaj rekord
-router.post('/ulica', function (req, res, next) {
-    // let android = new Android(req.body);
-    // android.save();
-    Baza.create(req.body).then(function (baza) {
-        res.send(baza);
-    }).catch(next);
-
-});
-
 //dodaj lat lon
 router.post('/ulica/coordy', function (req, res, next) {
     const lat = req.body.lat;
@@ -236,9 +226,10 @@ router.get('/geoloc/single', (req, res, next) => {
             if (!response.error) {
                 baza.findByIdAndUpdate(response.clientId, { $set: { "addresses.0.coordinates": [response.lat, response.lng], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
                     //console.log(update);
+                    let zwrotka = {update: update, clientId:response.clientId, clientName: response.clientName, addressNoEncode: response.addressNoEncode}
                     res.status(200).send({
                         success: true,
-                        'data': update
+                        'data': zwrotka
                     });
                 })
             } else {
