@@ -41,12 +41,14 @@ router.post('/ulica', function (req, res, next) {
 router.post('/ulica/coordy', function (req, res, next) {
     const lat = req.body.lat;
     const lon = req.body.lon;
-    const ulica = req.body.ulica;
-    const miasto = req.body.miasto;
-    console.log(lat, lng, ulica);
-    Baza.findOneAndUpdate({ ulica: ulica, miasto: miasto }, { $set: { lat, lng } }).then(function (baza, result) {
-        // res.send(baza);
-        res.status(200).send({ document: result, success: true });
+    const id = req.body.id
+    console.log(lat, 'lat',  lon, 'lon', id, 'id');
+    baza.findByIdAndUpdate(id, { $set: { "addresses.0.coordinates": [lat, lon], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
+        //console.log(update);
+        res.status(200).send({
+            success: true,
+            'data': update
+        });
     })
 })
 
@@ -216,13 +218,14 @@ router.get('/geoloc/single', (req, res, next) => {
                             cityAPI: cityAPI,
                             lat: value.data.results[0].geometry.location.lat,
                             lng: value.data.results[0].geometry.location.lng,
-                            clientId: id
+                            clientId: id,
+                            clientName: record[0].name
                         };
 
                         resolve(resp);
                     } else {
                         const error = 'Could not get coordinates';
-                        const resp = { error: error };
+                        const resp = { error: error, addressNoEncode: addressNoEncode, clientName: record[0].name, clientId: id };
                         resolve(resp);
                     }
                 })
