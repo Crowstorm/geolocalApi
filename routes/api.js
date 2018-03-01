@@ -73,7 +73,7 @@ router.delete('/database/delete/', (req, res, next) => {
 
 //masowka 2.0
 router.get('/geoloc/all', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(100).then((records, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(5).then((records, result) => {
         let arr = _.toArray(records);
         let coordsArr = [];
 
@@ -87,19 +87,16 @@ router.get('/geoloc/all', (req, res, next) => {
             let arraysOfUsers = { arrSucc, arrCheck, arrFail, noOfSuccess, noCoords };
 
             arr.forEach((record, index) => {
-                //console.log(user);
                 if (!record.addresses[0]) {
                     console.log('Brak adresu');
-                    noCoords = noCoords +1;
+                    noCoords = noCoords + 1;
                     console.log('fejle', noCoords)
                     arrFail.push(record);
                 } else {
                     let coordPromise = new Promise((resolve, reject) => {
                         //console.log(record);
                         const street = record.addresses[0].route.concat(', ').concat(record.addresses[0].street_number);
-                        //console.log('ulica', street)
                         const city = record.addresses[0].locality;
-                        //console.log('miasto', city)
 
                         const address = encodeURI(street.concat(', ').concat(city)); //Dla API
                         const addressNoEncode = street.concat(', ').concat(city); //Dla zwrotki
@@ -107,7 +104,10 @@ router.get('/geoloc/all', (req, res, next) => {
                         //AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI
                         //2 klucz api
                         //AIzaSyD4N5V3BF_gXXHy5ZC_EuQGYTgUkc3Feb0
-                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyD4N5V3BF_gXXHy5ZC_EuQGYTgUkc3Feb0`;
+                        //3 klucz
+                        // AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds
+
+                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds`;
                         setTimeout(function () {
                             let coords = axios.get(url).then((value) => {
                                 if (value.data.status == 'OK') {
@@ -133,20 +133,24 @@ router.get('/geoloc/all', (req, res, next) => {
                     })
 
                     coordPromise.then(response => {
-                        let arrPromise = new Promise((resolve, reject) =>{
+                        let arrPromise = new Promise((resolve, reject) => {
                             if (!response.error) {
-                                //console.log('response', response)
+                                console.log('response', response)
+                                console.log('type: ', response.googleMapData.data.results[0].types[0])
                                 //console.log('id', response.clientId);
-                                baza.findByIdAndUpdate(response.clientId, { $set: { "addresses.0.coordinates": [response.lat, response.lng], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
-                                    //console.log(update);
-                                    // res.status(200).send({
-                                    //     success: true,
-                                    //     'data': update
-                                    // });
-                                    arrSucc.push(update);
-                                    noOfSuccess = noOfSuccess +1;
-                                    console.log('sakcesy', noOfSuccess)
-                                })
+                                if (response.googleMapData.data.results[0].types[0] == 'street_address' || response.googleMapData.data.results[0].types[0] == 'premise') {
+                                    baza.findByIdAndUpdate(response.clientId, { $set: { "addresses.0.coordinates": [response.lat, response.lng], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
+                                        arrSucc.push(update);
+                                        noOfSuccess = noOfSuccess + 1;
+                                        console.log('sakcesy', noOfSuccess)
+                                    })
+                                } else {
+                                    baza.findById(response.clientId).then((user) => {
+                                        arrCheck.push(user);
+                                        noCoords = noCoords + 1;
+                                        console.log('fail', noCoords)
+                                    })
+                                }
                             } else {
                                 console.log('Nie mozna ustawic adresu')
                                 console.log(response.error)
@@ -154,23 +158,23 @@ router.get('/geoloc/all', (req, res, next) => {
                             }
                             resolve(arraysOfUsers);
                         })
-                        
+
                         arrPromise.then(coords => {
                             // console.log('ostateczny', coords);
-                            if (index +1  == arr.length) {
+                            if (index + 1 == arr.length) {
                                 console.log('koniec');
                                 resolve(coords);
                             }
                         })
                     })
                 }
-                
+
             })
 
-           // resolve(arraysOfUsers);
+            // resolve(arraysOfUsers);
         })
 
-        forEachPromise.then(response =>{
+        forEachPromise.then(response => {
             res.status(200).send({
                 success: true,
                 'data': response
@@ -183,7 +187,7 @@ router.get('/geoloc/all', (req, res, next) => {
 
 //pojedyncze rekordy
 router.get('/geoloc/single', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(2).then((record, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {
         let coordPromise = new Promise((resolve, reject) => {
             if (!record[0].addresses[0]) {
                 const resp = {
