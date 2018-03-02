@@ -15,17 +15,6 @@ const Bms = require('../models/bms')
 //ustaw jaka baza ma byc przerabiana (schema)
 const baza = Bms;
 
-//testowa szukajka
-router.get('/ulica', function (req, res, next) {
-    // db.getCollection('company_company_copy').find({}).then(function (baza){
-    //     res.send(baza);
-    // })
-    baza.find({ name: "Gabinet Weterynaryjny" }).limit(5).then(function (baza) {
-        //console.log(baza.name)
-        res.send(baza);
-
-    }).catch(next);
-})
 
 //dodaj lat lon
 router.post('/ulica/coordy', function (req, res, next) {
@@ -65,7 +54,7 @@ router.delete('/database/delete/', (req, res, next) => {
 
 //masowka 2.0
 router.get('/geoloc/all', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(5).then((records, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(10).then((records, result) => {
         let arr = _.toArray(records);
         let coordsArr = [];
 
@@ -99,7 +88,7 @@ router.get('/geoloc/all', (req, res, next) => {
                         //3 klucz
                         // AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds
 
-                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds`;
+                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
                         setTimeout(function () {
                             let coords = axios.get(url).then((value) => {
                                 if (value.data.status == 'OK') {

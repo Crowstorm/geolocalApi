@@ -17,7 +17,9 @@ const BmsSchema = new Schema({
 
 });
 
-const Bms = mongoose.model('company_company_newCoords', BmsSchema, 'company_company_newCoords');
+//poprawna - stara dobra
+//company_company -> z 1000 rekordow ustawionych poprawnie
+const Bms = mongoose.model('company_company', BmsSchema, 'company_company');
 //trzeci argument preventuje utworzenie liczby mnogiej
 
 module.exports = Bms;
