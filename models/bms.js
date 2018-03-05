@@ -13,6 +13,9 @@ const BmsSchema = new Schema({
         coordinates: Array,
         coordinatesSet: Boolean
     }],
+    phones:[{
+        number: String
+    }],
     name: String,
 
 });

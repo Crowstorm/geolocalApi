@@ -54,7 +54,7 @@ router.delete('/database/delete/', (req, res, next) => {
 
 //masowka 2.0
 router.get('/geoloc/all', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(10).then((records, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(1000).then((records, result) => {
         let arr = _.toArray(records);
         let coordsArr = [];
 
@@ -62,6 +62,7 @@ router.get('/geoloc/all', (req, res, next) => {
             //Do zwrotki dla usera
             let noOfSuccess = 0;
             let noCoords = 0;
+            let googleCount = 0;
             let arrSucc = [];
             let arrFail = [];
             let arrCheck = [];
@@ -88,9 +89,11 @@ router.get('/geoloc/all', (req, res, next) => {
                         //3 klucz
                         // AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds
 
-                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyBHek4tQK4jSQhVSoxw4s4c8tz_1z3xuNI`;
+                        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAMqoqcQ5d0U9jDKDgNaj1K3vsV3MoSAds`;
                         setTimeout(function () {
                             let coords = axios.get(url).then((value) => {
+                                googleCount++;
+                                console.log('Zapytan do google: ', googleCount)
                                 if (value.data.status == 'OK') {
 
                                     const resp = {
@@ -116,8 +119,8 @@ router.get('/geoloc/all', (req, res, next) => {
                     coordPromise.then(response => {
                         let arrPromise = new Promise((resolve, reject) => {
                             if (!response.error) {
-                                console.log('response', response)
-                                console.log('type: ', response.googleMapData.data.results[0].types[0])
+                               // console.log('response', response)
+                               // console.log('type: ', response.googleMapData.data.results[0].types[0])
                                 //console.log('id', response.clientId);
                                 if (response.googleMapData.data.results[0].types[0] == 'street_address' || response.googleMapData.data.results[0].types[0] == 'premise') {
                                     baza.findByIdAndUpdate(response.clientId, { $set: { "addresses.0.coordinates": [response.lat, response.lng], "addresses.0.coordinatesSet": true } }, { new: true }).then((update) => {
@@ -171,6 +174,7 @@ router.get('/geoloc/single', (req, res, next) => {
     baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {
         let coordPromise = new Promise((resolve, reject) => {
             if (!record[0].addresses[0]) {
+                console.log(record[0].phones[0])
                 const resp = {
                     error: 'No address found',
                     name: record[0].name,
