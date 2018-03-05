@@ -54,7 +54,7 @@ router.delete('/database/delete/', (req, res, next) => {
 
 //masowka 2.0
 router.get('/geoloc/all', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(20).then((records, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).then((records, result) => {
         let arr = _.toArray(records);
         let coordsArr = [];
         let limit = 0;
