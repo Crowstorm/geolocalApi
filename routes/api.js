@@ -54,9 +54,10 @@ router.delete('/database/delete/', (req, res, next) => {
 
 //masowka 2.0
 router.get('/geoloc/all', (req, res, next) => {
-    baza.find({ "addresses.coordinatesSet": null }).limit(1000).then((records, result) => {
+    baza.find({ "addresses.coordinatesSet": null }).limit(20).then((records, result) => {
         let arr = _.toArray(records);
         let coordsArr = [];
+        let limit = 0;
 
         let forEachPromise = new Promise((resolve, reject) => {
             //Do zwrotki dla usera
@@ -74,6 +75,7 @@ router.get('/geoloc/all', (req, res, next) => {
                     noCoords = noCoords + 1;
                     console.log('fejle', noCoords)
                     arrFail.push(record);
+                    limit++;
                 } else {
                     let coordPromise = new Promise((resolve, reject) => {
                         //console.log(record);
@@ -93,6 +95,7 @@ router.get('/geoloc/all', (req, res, next) => {
                         setTimeout(function () {
                             let coords = axios.get(url).then((value) => {
                                 googleCount++;
+                                limit++;
                                 console.log('Zapytan do google: ', googleCount)
                                 if (value.data.status == 'OK') {
 
@@ -144,17 +147,16 @@ router.get('/geoloc/all', (req, res, next) => {
                         })
 
                         arrPromise.then(coords => {
-                            // console.log('ostateczny', coords);
-                            if (index + 1 == arr.length) {
+                             //console.log('ostateczny', coords);
+                             console.log('Index', index, ' arr.length: ', arr.length, ' limit: ', limit)
+                            if (limit == arr.length) {
                                 console.log('koniec');
                                 resolve(coords);
                             }
                         })
                     })
                 }
-
             })
-
             // resolve(arraysOfUsers);
         })
 
@@ -174,7 +176,6 @@ router.get('/geoloc/single', (req, res, next) => {
     baza.find({ "addresses.coordinatesSet": null }).limit(1).then((record, result) => {
         let coordPromise = new Promise((resolve, reject) => {
             if (!record[0].addresses[0]) {
-                console.log(record[0].phones[0])
                 const resp = {
                     error: 'No address found',
                     name: record[0].name,
@@ -239,6 +240,7 @@ router.get('/geoloc/single', (req, res, next) => {
 router.get('/ulica/all', function (req, res, next) {
     baza.find().limit(1).then(function (baza, result) {
         let arr = _.toArray(baza);
+
         let coordsArr = [];
 
         //Nie wiem czy potrzebny promise, iksDe, do poprawy
